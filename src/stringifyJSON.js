@@ -52,6 +52,7 @@ var stringifyJSON = function(obj) {
     return '' + obj;
 };
 
+/*
 console.log(stringifyJSON());
 console.log(stringifyJSON(9));
 console.log(stringifyJSON(null));
@@ -74,3 +75,4 @@ console.log(stringifyJSON({"a":{"b":"c"}}));
 console.log(stringifyJSON({"a":["b", "c"]}));
 console.log(stringifyJSON([{"a":"b"}, {"c":"d"}]));
 console.log(stringifyJSON({"a":[],"c": {}, "b": true}));
+*/
