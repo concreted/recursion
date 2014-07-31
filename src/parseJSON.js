@@ -123,7 +123,34 @@ var parseJSON = function(json) {
     };
 
     var object = function() {
-    
+	if (current() !== '{') {
+	    throw "object: expected {";
+	}
+	
+	next();
+
+	var output = {};
+
+	while (current() !== '}') {
+	    var key = value();
+
+	    if (current() !== ':') {
+		throw "object: expected :";
+	    }
+
+	    next();
+
+	    var val = value();
+
+	    if (current() !== ',' && current() !== '}') {
+		throw "object: expected ,";
+	    }
+
+	    output[key] = val;
+	}
+
+	return output;
+
     };
 
     var value = function() {
