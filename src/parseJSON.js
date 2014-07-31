@@ -8,20 +8,18 @@
 // http://progzoo.net/wiki/Recursive_Descent_Parser_Tutorial
 
 var parseJSON = function(json) {
-    var text = json;
     var i = 0;
 
-    // Parse JSON
-    var parse = function(input) {
-	
-    };
-
     var current = function() {
-	return text[i];
+	if (i > json.length) {
+	    throw new SyntaxError("Unexpected end of input");
+	}
+
+	return json[i];
     };
 
     var next = function() {
-	return text[i++];
+	return json[i++];
     };
 
     var whitespace = function() {
@@ -37,18 +35,18 @@ var parseJSON = function(json) {
 	    output = next();
 	}
 
-	while (current() >= '0' && current() <= '9') {
+	while ((current() >= '0' && current() <= '9') || current() === '.') {
 	    output += next();
 	}
 	
 	if (output === '') {
-	    throw "no number";
+	    throw new SyntaxError("no number");
 	}
 	
 	output = +output;
 
 	if (isNaN(output)) {
-	    throw "bad number";
+	    throw new SyntaxError("bad number");
 	}
 	
 	return output;
@@ -58,12 +56,15 @@ var parseJSON = function(json) {
 	var output = '';
 
 	if (current() !== '"') {
-	    throw 'string: expected "';
+	    throw new SyntaxError('string: expected "');
 	}
 
 	next();
 
 	while (current() !== '"') {
+	    if (current() === '\\') {
+		next();
+	    }
 	    output += next();
 	}
 
@@ -81,7 +82,7 @@ var parseJSON = function(json) {
 	    if (val === 'true') {
 		return true;
 	    }
-	    throw 'bool: invalid';
+	    throw new SyntaxError('bool: invalid');
 	}
 
 	if (current() === 'f') {
@@ -93,15 +94,15 @@ var parseJSON = function(json) {
 	    if (val === 'false') {
 		return false;
 	    }
-	    throw 'bool: invalid';
+	    throw new SyntaxError('bool: invalid');
 	}
 
-	throw 'bool: invalid';	
+	throw new SyntaxError('bool: invalid');	
     }
     
     var array = function() {
 	if (current() !== '[') {
-	    throw 'array: expected [';
+	    throw new SyntaxError('array: expected [');
 	}
 
 	next();
@@ -109,12 +110,14 @@ var parseJSON = function(json) {
 	var output = [];
 	while (current() !== ']') {
 	    output.push(value());
+	    
 	    if (current() === ',') {
 		next();
 	    }
 	    else if (current() !== ']') {
-		throw 'array: expected ]';
+		throw new SyntaxError('array: expected ]');
 	    }
+
 	}
 
 	next();
@@ -124,7 +127,7 @@ var parseJSON = function(json) {
 
     var object = function() {
 	if (current() !== '{') {
-	    throw "object: expected {";
+	    throw new SyntaxError("object: expected {");
 	}
 	
 	next();
@@ -132,10 +135,10 @@ var parseJSON = function(json) {
 	var output = {};
 
 	while (current() !== '}') {
-	    var key = value();
+	    var key = value();	    
 
 	    if (current() !== ':') {
-		throw "object: expected :";
+		throw new SyntaxError("object: expected :");
 	    }
 
 	    next();
@@ -143,32 +146,66 @@ var parseJSON = function(json) {
 	    var val = value();
 
 	    if (current() !== ',' && current() !== '}') {
-		throw "object: expected ,";
+		throw new SyntaxError("object: expected ,");
 	    }
 
 	    output[key] = val;
+
+	    if (current() === ',') {
+		next();
+	    }
+	    
 	}
+
+	next();
 
 	return output;
 
     };
 
+    var nul = function() {
+	var val = next();
+	if (val !== 'n') {
+	    throw new SyntaxError("null: expected n");
+	}
+	val += (next());
+	val += (next());
+	val += (next());
+	
+	if (val !== 'null') {
+	    throw new SyntaxError("null: expected null");
+	}
+
+	return null;
+
+    }
+
     var value = function() {
 	whitespace();
 
+	var output = null;
+
 	if (current() === '-' || (current() >= '0' && current() <= '9')) 
-	    return number();
+	    output = number();
 	if (current() === '[')
-	    return array();
+	    output = array();
 	if (current() === '{')
-	    return object();
+	    output = object();
 	if (current() === 't' || current() === 'f') 
-	    return bool();
+	    output = bool();
 	if (current() === '"')
-	    return string();
+	    output = string();
+	if (current() === 'n')
+	    output = nul();
 
 	whitespace();
+
+	return output;
     };
+
+    if (!json) return null;
+
+    //console.log(json);
 
     return value();
 };
