@@ -69,6 +69,31 @@ var parseJSON = function(json) {
 
 	return output;
     }
+
+    var bool = function() {
+	if (current() === 't') {
+	    var val = next();
+	    val += next();
+	    val += next();
+	    val += next();
+	    if (val === 'true') 
+		return true;
+	    throw 'bool: invalid';
+	}
+
+	if (current() === 'f') {
+	    var val = next();
+	    val += next();
+	    val += next();
+	    val += next();
+	    val += next();
+	    if (val === 'false')
+		return false;
+	    throw 'bool: invalid';
+	}
+
+	throw 'bool: invalid';	
+    }
     
     var array = function() {
 
@@ -87,10 +112,11 @@ var parseJSON = function(json) {
 	    return array();
 	if (current() === '{')
 	    return object();
+	if (current() === 't' || current() === 'f') 
+	    return bool();
 	if (current() === '"')
 	    return string();
     };
-
 
     return value();
 };
